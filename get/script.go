@@ -1,13 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
 	"sort"
 	"strconv"
-	"testscripts/utils"
 	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
@@ -39,20 +37,12 @@ func runGETAttack() {
 		rate := vegeta.Rate{Freq: currentRate, Per: time.Second}
 
 		targeter := func(tgt *vegeta.Target) error {
-			user := utils.GenerateRandomUser(userID, *withAddress, *withDOB)
-			userID++
-
-			payload, err := json.Marshal(user)
-			if err != nil {
-				return err
-			}
-
-			tgt.Method = "POST"
-			tgt.URL = "http://localhost:8080/user"
-			tgt.Body = payload
+			tgt.Method = "GET"
+			tgt.URL = fmt.Sprintf("http://localhost:8080/user/%d", userID)
 			tgt.Header = map[string][]string{
 				"Content-Type": {"application/json"},
 			}
+			userID++
 			return nil
 		}
 
