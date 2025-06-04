@@ -1,9 +1,13 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"time"
+
+	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
 type User struct {
@@ -87,4 +91,56 @@ func GenerateRandomUser(id int, withAddress bool, withDOB bool) User {
 		Phone:    phone,
 		Email:    email,
 	}
+}
+
+func OutputSummary(allMetrics []vegeta.Metrics, allLatencies []time.Duration, runNo int) {
+	fmt.Printf("\n=== FINAL SUMMARY RUN #%d ===", runNo)
+	var totalRequests, totalSuccess uint64
+	var maxLatency, totalLatency time.Duration
+	maxRate := 0
+
+	for i, m := range allMetrics {
+		rate := (i + 1) * 10
+		if rate > maxRate {
+			maxRate = rate
+		}
+		totalRequests += m.Requests
+		totalSuccess += uint64(float64(m.Requests) * m.Success)
+		totalLatency += m.Latencies.Mean
+		if m.Latencies.Max > maxLatency {
+			maxLatency = m.Latencies.Max
+		}
+	}
+
+	overallSuccess := float64(totalSuccess) / float64(totalRequests) * 100
+
+	sort.Slice(allLatencies, func(i, j int) bool {
+		return allLatencies[i] < allLatencies[j]
+	})
+
+	minLatency := allLatencies[0]
+	maxLatency = allLatencies[len(allLatencies)-1]
+	p50 := allLatencies[int(float64(len(allLatencies))*0.50)]
+	p90 := allLatencies[int(float64(len(allLatencies))*0.90)]
+	p95 := allLatencies[int(float64(len(allLatencies))*0.95)]
+	p99 := allLatencies[int(float64(len(allLatencies))*0.99)]
+
+	var totalLatencySum time.Duration
+	for _, lat := range allLatencies {
+		totalLatencySum += lat
+	}
+	meanLatency := totalLatencySum / time.Duration(len(allLatencies))
+
+	fmt.Printf("\nTest Duration: %d seconds\n", len(allMetrics))
+	fmt.Printf("Maximum Rate Achieved: %d req/s\n", maxRate)
+	fmt.Printf("Total Requests: %d\n", totalRequests)
+	fmt.Printf("Overall Success Rate: %.2f%%\n", overallSuccess)
+	fmt.Printf("\n=== LATENCY PERCENTILES ===\n")
+	fmt.Printf("Min:  %s\n", minLatency)
+	fmt.Printf("Mean: %s\n", meanLatency)
+	fmt.Printf("50th: %s\n", p50)
+	fmt.Printf("90th: %s\n", p90)
+	fmt.Printf("95th: %s\n", p95)
+	fmt.Printf("99th: %s\n", p99)
+	fmt.Printf("Max:  %s\n", maxLatency)
 }

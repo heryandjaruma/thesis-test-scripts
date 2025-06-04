@@ -38,20 +38,20 @@ func runGETAttack() {
 		rate := vegeta.Rate{Freq: currentRate, Per: time.Second}
 
 		targeter := func(tgt *vegeta.Target) error {
-			user := utils.GenerateRandomUser(userID, *withAddress, *withDOB)
-			userID++
+			user := utils.GenerateRandomUser(userID, true, false)
 
 			payload, err := json.Marshal(user)
 			if err != nil {
 				return err
 			}
 
-			tgt.Method = "POST"
+			tgt.Method = "PUT"
 			tgt.URL = "http://localhost:8080/user"
 			tgt.Body = payload
 			tgt.Header = map[string][]string{
 				"Content-Type": {"application/json"},
 			}
+			userID++
 			return nil
 		}
 
