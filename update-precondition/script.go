@@ -1,14 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
 	"testscripts/utils"
-	"time"
-
-	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
 var (
@@ -18,40 +16,51 @@ var (
 )
 
 func updatePrecondition() {
-	fmt.Printf("Creating %d users with rate of 1000 requests per second...\n", *userCount)
+	fmt.Printf("Creating %d users...\n", *userCount)
 
-	// Create a new targeter
-	targeter := func(t *vegeta.Target) error {
+	successCount := 0
+	failureCount := 0
+
+	for i := 1; i <= *userCount; i++ {
 		// Generate random user data
-		user := utils.GenerateRandomUser(int(time.Now().UnixNano()), *withAddress, *withDOB)
+		user := utils.GenerateRandomUser(i, *withAddress, *withDOB)
 
 		// Convert user to JSON
 		userJSON, err := json.Marshal(user)
 		if err != nil {
-			return err
+			fmt.Printf("Error marshaling user %d: %v\n", i, err)
+			failureCount++
+			continue
 		}
 
-		t.Method = "POST"
-		t.URL = "http://localhost:8080/user"
-		t.Body = userJSON
-		t.Header = http.Header{"Content-Type": {"application/json"}}
-		return nil
-	}
+		// Create HTTP POST request
+		resp, err := http.Post("http://localhost:8080/user", "application/json", bytes.NewBuffer(userJSON))
+		if err != nil {
+			fmt.Printf("Error creating user %d: %v\n", i, err)
+			failureCount++
+			continue
+		}
 
-	// Create an attacker
-	rate := vegeta.Rate{Freq: 1000, Per: time.Second}
-	duration := time.Duration(float64(*userCount) / 1000 * float64(time.Second))
-	attacker := vegeta.NewAttacker()
+		// Check response status
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			successCount++
+			if i%100 == 0 {
+				fmt.Printf("Created %d users so far...\n", i)
+			}
+		} else {
+			fmt.Printf("Failed to create user %d: HTTP %d\n", i, resp.StatusCode)
+			failureCount++
+		}
 
-	// Run the attack
-	var metrics vegeta.Metrics
-	for res := range attacker.Attack(targeter, rate, duration, "Load Test") {
-		metrics.Add(res)
+		resp.Body.Close()
+
 	}
-	metrics.Close()
 
 	fmt.Printf("\n=== SUMMARY ===\n")
-	fmt.Printf("Total requests: %d\n", metrics.Requests)
+	fmt.Printf("Total users attempted: %d\n", *userCount)
+	fmt.Printf("Successfully created: %d\n", successCount)
+	fmt.Printf("Failed: %d\n", failureCount)
+	fmt.Printf("Success rate: %.2f%%\n", float64(successCount)/float64(*userCount)*100)
 }
 
 func main() {
