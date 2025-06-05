@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -93,8 +94,8 @@ func GenerateRandomUser(id int, withAddress bool, withDOB bool) User {
 	}
 }
 
-func OutputSummary(allMetrics []vegeta.Metrics, allLatencies []time.Duration, runNo int) {
-	fmt.Printf("\n=== FINAL SUMMARY RUN #%d ===", runNo)
+func OutputSummary(allMetrics []vegeta.Metrics, allLatencies []time.Duration, testCaseName string, runNo int) {
+	fmt.Printf("\n=== FINAL SUMMARY TESTCASE %s RUN #%d ===\n", testCaseName, runNo)
 	var totalRequests, totalSuccess uint64
 	var maxLatency, totalLatency time.Duration
 	maxRate := 0
@@ -109,6 +110,17 @@ func OutputSummary(allMetrics []vegeta.Metrics, allLatencies []time.Duration, ru
 		totalLatency += m.Latencies.Mean
 		if m.Latencies.Max > maxLatency {
 			maxLatency = m.Latencies.Max
+		}
+
+		textReporter := vegeta.NewTextReporter(&m)
+		textReporter.Report(os.Stdout)
+		fmt.Println()
+
+		jsonFile, err := os.Create(fmt.Sprintf("./reports/load_test_report_%s_%d_%d.json", testCaseName, runNo, i+1))
+		if err == nil {
+			jsonReporter := vegeta.NewJSONReporter(&m)
+			jsonReporter.Report(jsonFile)
+			jsonFile.Close()
 		}
 	}
 
