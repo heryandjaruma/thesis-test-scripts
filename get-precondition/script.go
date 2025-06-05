@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"testscripts/utils"
-	"time"
 )
 
 var (
@@ -54,9 +53,6 @@ func getPrecondition() {
 		}
 
 		resp.Body.Close()
-
-		// Small delay to avoid overwhelming the server
-		time.Sleep(100 * time.Nanosecond)
 	}
 
 	fmt.Printf("\n=== SUMMARY ===\n")
