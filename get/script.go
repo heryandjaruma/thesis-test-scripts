@@ -12,8 +12,6 @@ import (
 )
 
 var (
-	withAddress  = flag.Bool("withAddress", false, "Include address in user data")
-	withDOB      = flag.Bool("withDOB", false, "Include date of birth in user data")
 	maxRate      = flag.Int("maxRate", 1000, "Maximum rate of requests per second")
 	testCaseName = flag.String("testCaseName", "", "Test case name")
 	runNo        = flag.Int("runNo", 1, "Run number")
