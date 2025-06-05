@@ -20,7 +20,7 @@ var (
 	runNo        = flag.Int("runNo", 1, "Run number")
 )
 
-func runGETAttack() {
+func runUPDATEAttack() {
 	rand.Seed(time.Now().UnixNano())
 
 	currentRate := 10
@@ -39,7 +39,7 @@ func runGETAttack() {
 		rate := vegeta.Rate{Freq: currentRate, Per: time.Second}
 
 		targeter := func(tgt *vegeta.Target) error {
-			user := utils.GenerateRandomUser(userID, true, false)
+			user := utils.GenerateRandomUser(userID, *withAddress, *withDOB)
 
 			payload, err := json.Marshal(user)
 			if err != nil {
@@ -119,5 +119,5 @@ func runGETAttack() {
 func main() {
 	flag.Parse()
 
-	runGETAttack()
+	runUPDATEAttack()
 }
