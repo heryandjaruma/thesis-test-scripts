@@ -56,7 +56,7 @@ func getPrecondition() {
 		resp.Body.Close()
 
 		// Small delay to avoid overwhelming the server
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(100 * time.Nanosecond)
 	}
 
 	fmt.Printf("\n=== SUMMARY ===\n")

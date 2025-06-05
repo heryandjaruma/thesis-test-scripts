@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	maxRate      = flag.Int("maxRate", 1000, "Maximum rate of requests per second")
+	maxRate      = flag.Int("maxRate", 5000, "Maximum rate of requests per second")
 	testCaseName = flag.String("testCaseName", "", "Test case name")
 	runNo        = flag.Int("runNo", 1, "Run number")
 )
@@ -20,7 +20,8 @@ var (
 func runGETAttack() {
 	rand.Seed(time.Now().UnixNano())
 
-	currentRate := 10
+	multiplier := 100
+	currentRate := 100
 	duration := 1 * time.Second
 	failureThreshold := 0.95
 	maxConsecutiveFailures := 3
@@ -94,7 +95,7 @@ func runGETAttack() {
 
 		fmt.Println("---")
 
-		currentRate += 10
+		currentRate += multiplier
 
 		if currentRate > *maxRate {
 			fmt.Printf("\n🛑 MAX RATE REACHED! Stopping at %d req/s.\n", *maxRate)
