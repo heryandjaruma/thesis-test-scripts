@@ -12,14 +12,12 @@ import (
 )
 
 var (
-	withAddress  = flag.Bool("withAddress", false, "Include address in user data")
-	withDOB      = flag.Bool("withDOB", false, "Include date of birth in user data")
 	maxRate      = flag.Int("maxRate", 5000, "Maximum rate of requests per second")
 	testCaseName = flag.String("testCaseName", "", "Test case name")
 	runNo        = flag.Int("runNo", 1, "Run number")
 )
 
-func runGETAttack() {
+func runDELETEAttack() {
 	rand.Seed(time.Now().UnixNano())
 
 	multiplier := 100
@@ -111,5 +109,5 @@ func runGETAttack() {
 func main() {
 	flag.Parse()
 
-	runGETAttack()
+	runDELETEAttack()
 }
