@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	userCount   = flag.Int("userCount", 150000, "Number of users to create")
+	userCount   = flag.Int("userCount", 127500, "Number of users to create")
 	withAddress = flag.Bool("withAddress", false, "Include address in user data")
 	withDOB     = flag.Bool("withDOB", false, "Include date of birth in user data")
 )
