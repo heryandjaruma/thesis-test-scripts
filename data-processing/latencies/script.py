@@ -8,32 +8,38 @@ import numpy as np
 reports_dir = "/Users/heryandjaruma/Library/Mobile Documents/com~apple~CloudDocs/BINUS/TestScripts/reports-combined"
 json_files = glob.glob(os.path.join(reports_dir, '*.json'))
 
-TESTCASE="WF-R4"
+CASE = 6
+OPERATION = "D"
+TESTCASE1=f"WF-{OPERATION}{CASE}"
+TESTCASE2=f"VT-{OPERATION}{CASE}"
 
 all_latencies_data = []
 
-for file_path in json_files:
-    if TESTCASE in file_path:
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-            print(f"Loaded data from: {file_path}")
-            
-            # Extract iteration number from filename
-            iteration = file_path.split('_')[-2]  # Gets the iteration number (1, 2, or 3)
-            
-            # Extract latencies data
-            latencies_records = []
-            
-            for i, record in enumerate(data):
-                # Latencies data - convert from nanoseconds to milliseconds
-                latency_row = {
-                    'iteration': iteration,
-                    'second': i + 1,  # Time in seconds (1-50)
-                    'mean': record['latencies']['mean'] / 1_000_000  # Convert ns to ms
-                }
-                latencies_records.append(latency_row)
-            
-            all_latencies_data.extend(latencies_records)
+# Process both test cases
+for testcase in [TESTCASE1, TESTCASE2]:
+    for file_path in json_files:
+        if testcase in file_path:
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+                print(f"Loaded data from: {file_path}")
+                
+                # Extract iteration number from filename
+                iteration = file_path.split('_')[-2]  # Gets the iteration number (1, 2, or 3)
+                
+                # Extract latencies data
+                latencies_records = []
+                
+                for i, record in enumerate(data):
+                    # Latencies data - convert from nanoseconds to milliseconds
+                    latency_row = {
+                        'testcase': testcase,
+                        'iteration': iteration,
+                        'second': i + 1,  # Time in seconds (1-50)
+                        'mean': record['latencies']['mean'] / 1_000_000  # Convert ns to ms
+                    }
+                    latencies_records.append(latency_row)
+                
+                all_latencies_data.extend(latencies_records)
 
 # Create DataFrame
 latencies_df = pd.DataFrame(all_latencies_data)
@@ -43,27 +49,64 @@ print("\nLatencies DataFrame:")
 print(latencies_df.head())
 print(f"Shape: {latencies_df.shape}")
 
-# Create single plot for mean latencies only
+# Calculate mean across all iterations for each test case
+mean_by_testcase = latencies_df.groupby(['testcase', 'second'])['mean'].mean().reset_index()
+
+# Create single plot for mean latencies comparison
 fig, ax = plt.subplots(1, 1, figsize=(12, 8))
 
-# Define similar color shades (different shades of blue) with transparency
-colors = ['#1f77b4', '#5fa3d3', '#9ecae1']  # Light to dark blue shades
-iteration_labels = ['Iteration 1', 'Iteration 2', 'Iteration 3']
+# Define better color groups with stronger distinction
+# WF-R4: Blue family, VT-R4: Orange family
+colors = {
+    TESTCASE1: ['#1f77b4', '#4a90e2', '#7bb3f0'],  # Blue shades (dark to light)
+    TESTCASE2: ['#ff7f0e', '#ff9f40', '#ffbf73']   # Orange shades (dark to light)
+}
 
-# Plot mean latencies for each iteration with transparency and smaller dots
-for i, iteration in enumerate(['1', '2', '3']):
-    iteration_data = latencies_df[latencies_df['iteration'] == iteration]
-    if not iteration_data.empty:
-        ax.plot(iteration_data['second'], iteration_data['mean'], 
-                color=colors[i], label=iteration_labels[i], 
-                linewidth=1, marker='o', markersize=2, alpha=0.7)
+# Mean line colors (darker versions)
+mean_colors = {
+    TESTCASE1: '#0d4f8c',  # Darker blue
+    TESTCASE2: '#cc5500'   # Darker orange
+}
 
-ax.set_title('Mean Latencies Over Time by Iteration', fontsize=16, fontweight='bold')
-ax.set_xlabel('Time (seconds)', fontsize=12)
-ax.set_ylabel('Mean Latency (ms)', fontsize=12)
-ax.legend(fontsize=11)
+iteration_labels = ['Iterasi 1', 'Iterasi 2', 'Iterasi 3']
+
+# Plot mean latencies for each test case and iteration
+for testcase in [TESTCASE1, TESTCASE2]:
+    for i, iteration in enumerate(['1', '2', '3']):
+        iteration_data = latencies_df[(latencies_df['testcase'] == testcase) & 
+                                    (latencies_df['iteration'] == iteration)]
+        if not iteration_data.empty:
+            label = f"{testcase} - {iteration_labels[i]}"
+            ax.plot(iteration_data['second'], iteration_data['mean'], 
+                    color=colors[testcase][i], label=label, 
+                    linewidth=1, alpha=0.8)
+
+# Plot mean lines for each test case
+for testcase in [TESTCASE1, TESTCASE2]:
+    testcase_mean_data = mean_by_testcase[mean_by_testcase['testcase'] == testcase]
+    if not testcase_mean_data.empty:
+        ax.plot(testcase_mean_data['second'], testcase_mean_data['mean'], 
+                color=mean_colors[testcase], label=f"{testcase} - Mean", 
+                linewidth=1.5, linestyle='--', alpha=1)
+
+ax.set_title(f'Perbandingan Rata-rata Latensi: {TESTCASE1} vs {TESTCASE2}', fontsize=16, fontweight='bold')
+ax.set_xlabel('Waktu (seconds)', fontsize=12)
+ax.set_ylabel('Rata-rata Latensi (ms)', fontsize=12)
+ax.legend(fontsize=10, loc='upper right')
 ax.grid(True, alpha=0.3)
 ax.set_xlim(1, 50)
+
+
+
+# Export results in the requested format
+results_dir = "results"
+os.makedirs(results_dir, exist_ok=True)
+
+# Create filename in the format TESTCASE1_vs_TESTCASE2_latencies
+filename_base = f"{TESTCASE1}_vs_{TESTCASE2}_latencies"
+
+# Save the plot
+plt.savefig(f"{results_dir}/{filename_base}.png", dpi=300, bbox_inches='tight')
 
 plt.tight_layout()
 plt.show()
