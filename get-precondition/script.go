@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	userCount   = flag.Int("userCount", 150000, "Number of users to create")
+	startID     = flag.Int("startID", 1, "Start ID for user")
+	userCount   = flag.Int("userCount", 130000, "Number of users to create")
 	withAddress = flag.Bool("withAddress", false, "Include address in user data")
 	withDOB     = flag.Bool("withDOB", false, "Include date of birth in user data")
 )
@@ -21,7 +22,7 @@ func getPrecondition() {
 	successCount := 0
 	failureCount := 0
 
-	for i := 1; i <= *userCount; i++ {
+	for i := *startID; i <= *userCount; i++ {
 		// Generate random user data
 		user := utils.GenerateRandomUser(i, *withAddress, *withDOB)
 
