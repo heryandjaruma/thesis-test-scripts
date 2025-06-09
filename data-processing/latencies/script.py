@@ -86,11 +86,11 @@ for testcase in [TESTCASE1, TESTCASE2]:
     testcase_mean_data = mean_by_testcase[mean_by_testcase['testcase'] == testcase]
     if not testcase_mean_data.empty:
         ax.plot(testcase_mean_data['second'], testcase_mean_data['mean'], 
-                color=mean_colors[testcase], label=f"{testcase} - Mean", 
+                color=mean_colors[testcase], label=f"{testcase} - Rata-rata", 
                 linewidth=1.5, linestyle='--', alpha=1)
 
-ax.set_title(f'Perbandingan Rata-rata Latensi: {TESTCASE1} vs {TESTCASE2}', fontsize=16, fontweight='bold')
-ax.set_xlabel('Waktu (seconds)', fontsize=12)
+ax.set_title(f'Perbandingan Rata-rata Latensi: {TESTCASE1} dan {TESTCASE2}', fontsize=16, fontweight='bold')
+ax.set_xlabel('Detik Ke-', fontsize=12)
 ax.set_ylabel('Rata-rata Latensi (ms)', fontsize=12)
 ax.legend(fontsize=10, loc='upper right')
 ax.grid(True, alpha=0.3)
@@ -108,5 +108,4 @@ filename_base = f"{TESTCASE1}_vs_{TESTCASE2}_latencies"
 # Save the plot
 plt.savefig(f"{results_dir}/{filename_base}.png", dpi=300, bbox_inches='tight')
 
-plt.tight_layout()
 plt.show()
