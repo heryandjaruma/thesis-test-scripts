@@ -104,6 +104,7 @@ os.makedirs(results_dir, exist_ok=True)
 
 # Create filename in the format TESTCASE1_vs_TESTCASE2_latencies
 filename_base = f"{TESTCASE1}_vs_{TESTCASE2}_latencies"
+plt.tight_layout()
 
 # Save the plot
 plt.savefig(f"{results_dir}/{filename_base}.png", dpi=300, bbox_inches='tight')
